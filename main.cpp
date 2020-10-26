@@ -1,7 +1,9 @@
 #include <iostream>
+#include <vector>
+using namespace std;
 
 int main(int argc, const char *argv[])
 {
-  std::cout << "test" << std::endl;
+  cout << "test" << endl;
   return 0;
 }
