@@ -79,6 +79,15 @@ void print_in(TreeNode *root)
   print_in(root->right);
 }
 
+void print_las(TreeNode *root)
+{
+  if (root == nullptr)
+    return;
+  print_las(root->left);
+  print_las(root->right);
+  cout << root->val << " ";
+}
+
 int main(int argc, const char *argv[])
 {
   vector<int> preorder = {1, 2, 4, 5, 3, 6, 7};
@@ -89,6 +98,8 @@ int main(int argc, const char *argv[])
   print_pre(root);
   cout << endl;
   print_in(root);
+  cout << endl;
+  print_las(root);
   cout << endl;
   return 0;
 }
