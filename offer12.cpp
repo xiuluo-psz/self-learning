@@ -31,9 +31,6 @@ public:
              dfs(board, visited, pos_i - 1, pos_j, world, index) ||
              dfs(board, visited, pos_i, pos_j + 1, world, index) ||
              dfs(board, visited, pos_i, pos_j - 1, world, index);
-    index--;
-    visited[pos_i][pos_j] = 0;
-
     return result;
   }
   bool exist(vector<vector<char>> &board, string &world)
@@ -64,16 +61,8 @@ int main(int argc, const char *argv[])
   vector<char> c2 = {'E', 'F', 'G', 'H'};
   vector<char> c3 = {'I', 'J', 'K', 'L'};
   vector<vector<char>> board = {c1, c2, c3};
-  // for (auto v : board)
-  // {
-  //   for (auto i : v)
-  //   {
-  //     cout << i << " ";
-  //   }
-  //   cout << endl;
-  // }
-  string str = "";
-  // cout << str.size();
+  string str = "AEIJK";
+
   Solution s;
   cout << s.exist(board, str);
 
