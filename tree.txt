@@ -1,0 +1,299 @@
+<script>
+import { Checkbox } from 'vant'
+const TreeItem = {
+  name: 'tree-item',
+  props: ['root', 'item', 'index', 'wrap', 'disabled'],
+  methods: {
+    onExpand() {
+      this.expand = !this.expand
+    },
+    onClick() {
+      if (this.disabled) {
+        return
+      }
+      let temp = this.item
+      temp.check = !temp.check
+      if (temp.children) {
+        temp.children = this.callChildren(temp.children, temp.check)
+      }
+      this.part = false
+      this.$emit('change', temp, this.index)
+    },
+    onChange(e, i) {
+      let temp = this.item
+      if (temp.children) {
+        temp.children[i] = e
+        let count = temp.children.filter(item => item.check).length
+        if (count === temp.children.length) {
+          this.part = false
+          temp.check = true
+        }
+        if (count > 0 && count < temp.children.length) {
+          this.part = true
+          temp.check = false
+        } else if (count === 0) {
+          this.part = false
+          temp.check = false
+        }
+        this.part = this.mapChildren(temp.children).count > 0
+        if (count === temp.children.length) {
+          this.part = false
+        }
+      }
+      this.$emit('change', temp, this.index)
+    },
+    callChildren(list, check) {
+      list.map(e => {
+        e.check = check
+        if (e.children) {
+          e.children = this.callChildren(e.children, check)
+        }
+      })
+      return list
+    },
+    mapChildren(list) {
+      let playload = { count: 0, length: 0 }
+      list.map(e => {
+        if (e.check) playload.count++
+        playload.length++
+        if (e.children) {
+          playload.count = playload.count + this.mapChildren(e.children).count
+          playload.length = length + this.mapChildren(e.children).length
+        }
+      })
+      return playload
+    }
+  },
+  data() {
+    return {
+      expand: false,
+      part: false
+    }
+  },
+  mounted() {
+    if (this.item.children && this.mapChildren(this.item.children).count > 0) {
+      this.part =
+        this.item.children.filter(item => item.check).length <
+        this.item.children.length
+    }
+  },
+  render() {
+    const { onChange } = this
+    // an inside function to rend List value
+    let valuesList = values => {
+      return values.map(e => (
+        <div class="item">
+          <span class="key">{e.key}</span>
+          <span class="value">{e.value}</span>
+        </div>
+      ))
+    }
+    // either item.value or item.values has value
+    return (
+      <div class={['tree-item', 'van-cell', 'van-cell--clickable']}>
+        <div class="info">
+          <div class="tree-check-box">
+            <div class={[this.item.children ? 'arrow' : 'block']}>
+              <icon
+                icon-class={this.expand ? 'caret-down' : 'caret-right'}
+                class={
+                  !this.item.children || !this.item.children.length
+                    ? 'tree-invisible'
+                    : ''
+                }
+                onClick={this.onExpand}
+              />
+            </div>
+            <div class="name van-ellipsis">
+              {this.item.classname || this.item.typename}
+            </div>
+          </div>
+          <div class="tree-right-side">
+            {!this.wrap && this.item.value ? (
+              <div class="van-cell__value value">{this.item.value}</div>
+            ) : null}
+
+            <Checkbox
+              value={this.item.check}
+              checked-color="#0a9b5b"
+              shape="square"
+              icon-size="13px"
+              onClick={this.onClick}
+              disabled={this.disabled}
+              class={this.part ? 'tree-part' : ''}
+            />
+          </div>
+        </div>
+        {this.wrap && this.item.check ? (
+          <div class="tree-wrap">
+            {this.item.value ? (
+              <div class="item">
+                {this.item.value} <span>手续费</span>
+              </div>
+            ) : null}
+
+            {this.item.values && this.item.values.constructor === Array
+              ? valuesList(this.item.values)
+              : null}
+          </div>
+        ) : null}
+
+        {this.expand ? (
+          <ul class={[this.expand ? 'expand' : '', 'tree-sub']}>
+            {this.item.children.map((sub, sIndex) => {
+              return (
+                <TreeItem
+                  item={sub}
+                  index={sIndex}
+                  onChange={onChange}
+                  disabled={this.disabled}
+                  wrap={this.wrap}
+                />
+              )
+            })}
+          </ul>
+        ) : null}
+      </div>
+    )
+  }
+}
+export default {
+  name: 'tree',
+  data() {
+    return {
+      treeList: []
+    }
+  },
+  props: {
+    list: Array,
+    disabled: {
+      type: Boolean,
+      value: false
+    },
+    wrap: {
+      type: Boolean,
+      value: false
+    }
+  },
+  mounted() {
+    this.treeList = this.list
+  },
+  watch: {
+    list(val) {
+      this.treeList = val
+    }
+  },
+  methods: {
+    onChange(item, index) {
+      let temp = this.treeList
+      temp[index] = item
+      this.$emit('change', temp)
+    }
+  },
+
+  render() {
+    const { onChange } = this
+    return (
+      <div>
+        {this.treeList.map((item, index) => {
+          return (
+            <TreeItem
+              item={item}
+              index={index}
+              root={true}
+              wrap={this.wrap}
+              onChange={onChange}
+              disabled={this.disabled}
+            />
+          )
+        })}
+      </div>
+    )
+  }
+}
+</script>
+
+<style lang="scss">
+.tree-item {
+  display: flex;
+  flex-direction: column;
+  .info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .arrow {
+      display: flow-root;
+    }
+    .block {
+      display: flow-root;
+      visibility: hidden;
+    }
+    .name {
+      font-weight: 500;
+      padding-left: 5px;
+    }
+  }
+}
+.tree-check-box {
+  display: flex;
+  width: 75%;
+}
+.tree-right-side {
+  display: flex;
+  .value {
+    padding-right: 10px;
+  }
+}
+.tree-sub {
+  padding-left: 10px;
+  .van-cell {
+    padding: 10px 0px 10px 10px;
+  }
+}
+.tree-hide {
+  display: none;
+}
+.tree-invisible {
+  visibility: hidden;
+}
+.tree-part {
+  position: relative;
+  .van-checkbox__icon .van-icon {
+    border: 1px solid #0a9b5b;
+  }
+}
+.tree-part::after {
+  position: absolute;
+  content: ' ';
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  background: #0a9b5b;
+  transform: translate(-50%, -50%) scale(1);
+}
+.tree-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-left: 20px;
+  border-left-style: solid;
+  border-color: #099b5b;
+  border-width: 2px;
+  .item {
+    font-size: 13px;
+    margin-left: 8px;
+    color: #606266;
+    font-weight: 500;
+    .key {
+      &::after {
+        content: '： ';
+      }
+    }
+    .value {
+      color: #099b5b;
+      font-weight: normal;
+    }
+  }
+}
+</style>
